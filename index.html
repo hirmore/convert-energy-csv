@@ -10,26 +10,32 @@
 
 <body>
     <main>
-        <h1>CSV Conversion MVP</h1>
-        <p>Load the mapping CSV, choose a conversion direction, then upload the input CSV to convert.</p>
+        <header class="hero">
+            <div>
+                <h1>CSV Conversion MVP</h1>
+                <p> Select a conversion direction and upload the input CSV file to convert.</p>
+            </div>
+            <div class="hero-meta">
+                <span id="versionInfo" class="badge">Version: loading…</span>
+            </div>
+        </header>
+
+        <div id="mappingStatus" class="status hidden">Loading default mapping...</div>
 
         <section class="card">
-            <h2>1. Load mapping</h2>
-            <p><strong>Required:</strong> <code>mappings/mapping.csv</code> with the same headers as your VBA mapping
-                table.</p>
-            <input id="mappingFile" type="file" accept=".csv" />
-            <div id="mappingStatus" class="status">No mapping loaded.</div>
+            <h2>Conversion</h2>
+            <div class="radio-group">
+                <label><input type="radio" name="direction" value="evoToSdmx" checked /> ISO(EVO) → SDMX</label>
+                <label><input type="radio" name="direction" value="sdmxToEvo" /> SDMX → ISO(EVO)</label>
+            </div>
         </section>
 
         <section class="card">
-            <h2>2. Choose conversion</h2>
-            <label><input type="radio" name="direction" value="sdmxToEvo" checked /> SDMX → EVO</label>
-            <label><input type="radio" name="direction" value="evoToSdmx" /> EVO → SDMX</label>
-        </section>
-
-        <section class="card">
-            <h2>3. Upload input CSV</h2>
-            <input id="inputFile" type="file" accept=".csv" />
+            <h2>Upload</h2>
+            <label class="file-input-label">
+                <input id="inputFile" type="file" accept=".csv" />
+                Choose CSV file
+            </label>
             <div id="inputStatus" class="status">No input file selected.</div>
         </section>
 
@@ -39,9 +45,11 @@
         </section>
 
         <section class="card">
-            <h2>Output</h2>
+            <div class="card-header">
+                <h2>Output</h2>
+                <button id="downloadButton" class="hidden" disabled>Save converted CSV</button>
+            </div>
             <textarea id="outputText" readonly></textarea>
-            <a id="downloadLink" class="hidden" download="converted.csv">Download converted CSV</a>
         </section>
     </main>
 

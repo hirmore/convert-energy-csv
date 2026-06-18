@@ -1,20 +1,48 @@
 * {
     box-sizing: border-box;
 }
+
 body {
     margin: 0;
     font-family: Inter, system-ui, sans-serif;
     background: #f4f7fb;
     color: #111827;
 }
+
 main {
     max-width: 900px;
     margin: 2rem auto;
     padding: 1rem;
 }
+
+.hero {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.hero-meta {
+    display: flex;
+    align-items: center;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 0.9rem;
+    border-radius: 9999px;
+    background: #e0f2fe;
+    color: #0369a1;
+    font-weight: 600;
+}
+
 h1 {
     margin-bottom: 0.5rem;
 }
+
 .card {
     background: #ffffff;
     border: 1px solid #d1d5db;
@@ -22,15 +50,59 @@ h1 {
     padding: 1rem 1.25rem;
     margin-bottom: 1rem;
 }
+
 .card h2 {
     margin-top: 0;
 }
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+}
+
+.card-header h2 {
+    margin: 0;
+}
+
+.card-header button {
+    margin: 0;
+}
+
 label {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     margin-right: 1.25rem;
 }
+
+.radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.75rem;
+}
+
+.file-input-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    appearance: none;
+    border: none;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 1rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    margin: 0.75rem 0 0 0;
+}
+
+.file-input-label input {
+    display: none;
+}
+
 button {
     appearance: none;
     border: none;
@@ -41,14 +113,17 @@ button {
     border-radius: 0.75rem;
     cursor: pointer;
 }
+
 button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
+
 .status {
     margin-top: 0.75rem;
     color: #374151;
 }
+
 textarea {
     width: 100%;
     min-height: 320px;
@@ -59,9 +134,22 @@ textarea {
     line-height: 1.5;
     resize: vertical;
 }
-a.hidden {
+
+.card.actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.card.actions .status {
+    margin-top: 0;
+}
+
+.hidden {
     display: none;
 }
+
 a {
     display: inline-block;
     margin-top: 0.75rem;
