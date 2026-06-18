@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSV Converter MVP</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <main>
+        <h1>CSV Conversion MVP</h1>
+        <p>Load the mapping CSV, choose a conversion direction, then upload the input CSV to convert.</p>
+
+        <section class="card">
+            <h2>1. Load mapping</h2>
+            <p><strong>Required:</strong> <code>mappings/mapping.csv</code> with the same headers as your VBA mapping
+                table.</p>
+            <input id="mappingFile" type="file" accept=".csv" />
+            <div id="mappingStatus" class="status">No mapping loaded.</div>
+        </section>
+
+        <section class="card">
+            <h2>2. Choose conversion</h2>
+            <label><input type="radio" name="direction" value="sdmxToEvo" checked /> SDMX → EVO</label>
+            <label><input type="radio" name="direction" value="evoToSdmx" /> EVO → SDMX</label>
+        </section>
+
+        <section class="card">
+            <h2>3. Upload input CSV</h2>
+            <input id="inputFile" type="file" accept=".csv" />
+            <div id="inputStatus" class="status">No input file selected.</div>
+        </section>
+
+        <section class="card actions">
+            <button id="convertButton" disabled>Convert CSV</button>
+            <div id="resultStatus" class="status"></div>
+        </section>
+
+        <section class="card">
+            <h2>Output</h2>
+            <textarea id="outputText" readonly></textarea>
+            <a id="downloadLink" class="hidden" download="converted.csv">Download converted CSV</a>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
