@@ -10,11 +10,14 @@ const downloadButton = document.getElementById("downloadButton");
 let downloadBlob = null;
 let downloadFileName = "converted.csv";
 
+let dateMapping = null;
+
 let mappingData = null;
 let inputFile = null;
 
 window.addEventListener("DOMContentLoaded", () => {
 	loadVersion();
+	loadDateMapping();
 	loadDefaultMapping();
 });
 
@@ -70,6 +73,16 @@ async function loadVersion() {
 	} catch (err) {
 		versionInfo.textContent = "Version unavailable";
 	}
+}
+
+async function loadDateMapping() {
+	const response = await fetch("constants/date.json");
+	if (!response.ok) {
+		throw new Error(
+			`Unable to fetch date mapping: ${response.status} ${response.statusText}`
+		);
+	}
+	dateMapping = await response.json();
 }
 
 convertButton.addEventListener("click", async () => {
@@ -515,20 +528,10 @@ function buildEvoKey(datatype, product, item1, item2) {
 function sdmxMonthToEvo(timePeriod) {
 	const [year, month] = timePeriod.split("-");
 	if (!year || !month) return timePeriod;
-	const months = {
-		"01": "JAN",
-		"02": "FEB",
-		"03": "MAR",
-		"04": "APR",
-		"05": "MAY",
-		"06": "JUN",
-		"07": "JUL",
-		"08": "AUG",
-		"09": "SEP",
-		10: "OCT",
-		11: "NOV",
-		12: "DEC",
-	};
+	const months = dateMapping && dateMapping.months;
+	if (!months) {
+		throw new Error("Date mapping not loaded");
+	}
 	return months[month] ? `${months[month]}${year}` : timePeriod;
 }
 
@@ -537,19 +540,15 @@ function evoMonthToSdmx(evoTime) {
 	if (trimmed.length < 7) return evoTime;
 	const mon = trimmed.slice(0, 3);
 	const year = trimmed.slice(trimmed.length - 4);
-	const months = {
-		JAN: "01",
-		FEB: "02",
-		MAR: "03",
-		APR: "04",
-		MAY: "05",
-		JUN: "06",
-		JUL: "07",
-		AUG: "08",
-		SEP: "09",
-		OCT: "10",
-		NOV: "11",
-		DEC: "12",
-	};
-	return months[mon] ? `${year}-${months[mon]}` : evoTime;
+	const months = dateMapping && dateMapping.months;
+	if (!months) {
+		throw new Error("Date mapping not loaded");
+	}
+	const reversed = {};
+	for (const k in months) {
+		if (Object.prototype.hasOwnProperty.call(months, k)) {
+			reversed[months[k]] = k.padStart(2, "0");
+		}
+	}
+	return reversed[mon] ? `${year}-${reversed[mon]}` : evoTime;
 }
