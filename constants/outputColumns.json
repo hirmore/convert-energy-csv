@@ -1,0 +1,37 @@
+{
+	"sdmxToEvo": [
+		"COUNTRY",
+		"QUEST",
+		"DATATYPE",
+		"PRODUCT",
+		"ITEM1",
+		"ITEM2",
+		"TIME",
+		"VALUE",
+		"FLAG"
+	],
+	"evoToSdmx": [
+		"DATAFLOW",
+		"QUEST_SOURCE",
+		"REF_AREA",
+		"FREQ",
+		"ENERGY_PRODUCT",
+		"MAIN_FLOW",
+		"FLOW_BREAKDOWN",
+		"PLANT_TECH",
+		"PLANT_TYPE",
+		"STOCKS",
+		"INFRASTRUCTURE_IND",
+		"VIS_A_VIS_AREA",
+		"MEASURE_VALUE_TYPE",
+		"FACILITY_ID",
+		"TIME_PERIOD",
+		"OBS_VALUE",
+		"UNIT_MEASURE",
+		"OBS_STATUS",
+		"CONF_STATUS",
+		"COMMENT_OBS",
+		"FACILITY_TYPE",
+		"FACILITY_NAME"
+	]
+}

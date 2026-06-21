@@ -10,15 +10,18 @@ const downloadButton = document.getElementById("downloadButton");
 let downloadBlob = null;
 let downloadFileName = "converted.csv";
 
-let dateMapping = null;
+let dateConst = null;
+let outputColumnHead = null;
 
-let mappingData = null;
+let mapProductFlows = null;
 let inputFile = null;
 
 window.addEventListener("DOMContentLoaded", () => {
 	loadVersion();
-	loadDateMapping();
-	loadDefaultMapping();
+	loadDateConstants();
+	loadOutputColumnHead();
+	loadRequiredColumns();
+	loadProductFlowsMapping();
 });
 
 downloadButton.addEventListener("click", () => {
@@ -41,21 +44,21 @@ inputFileInput.addEventListener("change", () => {
 	updateButtonState();
 });
 
-async function loadDefaultMapping() {
+async function loadProductFlowsMapping() {
 	try {
-		const response = await fetch("mappings/mapping.csv");
+		const response = await fetch("mappings/mapProductFlows.csv");
 		if (!response.ok) {
 			throw new Error(
 				`Unable to fetch mapping: ${response.status} ${response.statusText}`
 			);
 		}
 		const text = await response.text();
-		mappingData = parseMappingCsv(text);
-		mappingStatus.textContent = `Default mapping loaded: ${mappingData.rows.length} rows.`;
+		mapProductFlows = parseMappingCsv(text);
+		mappingStatus.textContent = `Product flows mapping loaded: ${mapProductFlows.rows.length} rows.`;
 	} catch (err) {
-		mappingData = null;
-		mappingStatus.textContent = `Failed to load default mapping: ${err.message}`;
-		resultStatus.textContent = `Default mapping failed: ${err.message}`;
+		mapProductFlows = null;
+		mappingStatus.textContent = `Failed to load product flows mapping: ${err.message}`;
+		resultStatus.textContent = `Product flows mapping failed: ${err.message}`;
 	}
 	updateButtonState();
 }
@@ -75,18 +78,46 @@ async function loadVersion() {
 	}
 }
 
-async function loadDateMapping() {
+async function loadDateConstants() {
 	const response = await fetch("constants/date.json");
 	if (!response.ok) {
 		throw new Error(
-			`Unable to fetch date mapping: ${response.status} ${response.statusText}`
+			`Unable to fetch date constants: ${response.status} ${response.statusText}`
 		);
 	}
-	dateMapping = await response.json();
+	dateConst = await response.json();
+}
+
+async function loadOutputColumnHead() {
+	try {
+		const response = await fetch("constants/outputColumns.json");
+		if (!response.ok) {
+			throw new Error(
+				`Unable to fetch output rows: ${response.status} ${response.statusText}`
+			);
+		}
+		outputColumnHead = await response.json();
+	} catch (err) {
+		resultStatus.textContent = `Failed to load output rows: ${err.message}`;
+	}
+}
+
+async function loadRequiredColumns() {
+	try {
+		const response = await fetch("constants/requiredColumns.json");
+		if (!response.ok) {
+			throw new Error(
+				`Unable to fetch required columns: ${response.status} ${response.statusText}`
+			);
+		}
+		requiredColumns = await response.json();
+	} catch (err) {
+		resultStatus.textContent = `Failed to load required columns: ${err.message}`;
+	}
 }
 
 convertButton.addEventListener("click", async () => {
-	if (!mappingData || !inputFile) {
+	if (!mapProductFlows || !inputFile) {
 		return;
 	}
 
@@ -98,9 +129,9 @@ convertButton.addEventListener("click", async () => {
 
 	try {
 		if (direction === "sdmxToEvo") {
-			result = convertSdmxToEvo(inputText, mappingData);
+			result = convertSdmxToEvo(inputText, mapProductFlows);
 		} else {
-			result = convertEvoToSdmx(inputText, mappingData);
+			result = convertEvoToSdmx(inputText, mapProductFlows);
 		}
 	} catch (err) {
 		resultStatus.textContent = `Conversion failed: ${err.message}`;
@@ -116,7 +147,7 @@ convertButton.addEventListener("click", async () => {
 });
 
 function updateButtonState() {
-	convertButton.disabled = !mappingData || !inputFile;
+	convertButton.disabled = !mapProductFlows || !inputFile;
 }
 
 function parseMappingCsv(csvText) {
@@ -124,31 +155,11 @@ function parseMappingCsv(csvText) {
 	if (rows.length < 2) return null;
 
 	const header = rows[0].map((h) => h.trim().toUpperCase());
-	const required = [
-		"DATATYPE",
-		"PRODUCT",
-		"ITEM1",
-		"ITEM2",
-		"ENERGY_PRODUCT",
-		"MAIN_FLOW",
-		"FLOW_BREAKDOWN",
-		"PLANT_TYPE",
-		"STOCKS",
-		"VIS_A_VIS_AREA",
-		"MEASURE_VALUE_TYPE",
-		"UNIT_MEASURE",
-	];
 
 	const headerIndex = {};
 	header.forEach((cell, index) => {
 		headerIndex[cell] = index;
 	});
-
-	for (const name of required) {
-		if (!(name in headerIndex)) {
-			throw new Error(`Missing mapping column ${name}`);
-		}
-	}
 
 	const map = { rows: [] };
 	for (let i = 1; i < rows.length; i += 1) {
@@ -175,7 +186,7 @@ function parseMappingCsv(csvText) {
 	return map;
 }
 
-function convertSdmxToEvo(text, mappingData) {
+function convertSdmxToEvo(text, mapProductFlows) {
 	const rows = parseCsv(text, ";");
 	if (rows.length < 2) {
 		throw new Error(
@@ -185,41 +196,16 @@ function convertSdmxToEvo(text, mappingData) {
 
 	const header = rows[0].map((cell) => cell.trim().toUpperCase());
 	const idx = arrayToIndex(header);
-	const required = [
-		"QUEST_SOURCE",
-		"REF_AREA",
-		"TIME_PERIOD",
-		"ENERGY_PRODUCT",
-		"MAIN_FLOW",
-		"FLOW_BREAKDOWN",
-		"PLANT_TYPE",
-		"STOCKS",
-		"VIS_A_VIS_AREA",
-		"MEASURE_VALUE_TYPE",
-		"UNIT_MEASURE",
-		"OBS_VALUE",
-		"OBS_STATUS",
-	];
+	const required = requiredColumns.sdmxToEvo;
+
 	required.forEach((name) => {
 		if (!(name in idx)) {
 			throw new Error(`SDMX input missing required column: ${name}`);
 		}
 	});
 
-	const mapping = buildSdmxToEvoMap(mappingData.rows);
-	const outputRows = [
-		[
-			"COUNTRY",
-			"QUEST",
-			"DATATYPE",
-			"PRODUCT",
-			"ITEM1",
-			"ITEM2",
-			"TIME",
-			"VALUE",
-			"FLAG",
-		],
-	];
+	const mapping = buildSdmxToEvoMap(mapProductFlows.rows);
+	const outputRows = [outputColumnHead.sdmxToEvo];
 
 	let read = 0;
 	let written = 0;
@@ -273,7 +259,8 @@ function convertSdmxToEvo(text, mappingData) {
 	return { csv: serializeCsv(outputRows, ","), read, written, skipped };
 }
 
-function convertEvoToSdmx(text, mappingData) {
+function convertEvoToSdmx(text, mapProductFlows) {
+	console.log("Starting EVO to SDMX conversion");
 	const rows = parseCsv(text, ",");
 	if (rows.length < 2) {
 		throw new Error(
@@ -282,51 +269,22 @@ function convertEvoToSdmx(text, mappingData) {
 	}
 
 	const header = rows[0].map((cell) => cell.trim().toUpperCase());
+	console.log("EVO input header columns:", header);
 	const idx = arrayToIndex(header);
-	const required = [
-		"COUNTRY",
-		"QUEST",
-		"DATATYPE",
-		"PRODUCT",
-		"ITEM1",
-		"ITEM2",
-		"TIME",
-		"VALUE",
-		"FLAG",
-	];
+	const required = requiredColumns.evoToSdmx;
 	required.forEach((name) => {
 		if (!(name in idx)) {
 			throw new Error(`EVO input missing required column: ${name}`);
 		}
 	});
 
-	const mapping = buildEvoToSdmxMap(mappingData.rows);
-	const outputRows = [
-		[
-			"DATAFLOW",
-			"QUEST_SOURCE",
-			"REF_AREA",
-			"FREQ",
-			"ENERGY_PRODUCT",
-			"MAIN_FLOW",
-			"FLOW_BREAKDOWN",
-			"PLANT_TECH",
-			"PLANT_TYPE",
-			"STOCKS",
-			"INFRASTRUCTURE_IND",
-			"VIS_A_VIS_AREA",
-			"MEASURE_VALUE_TYPE",
-			"FACILITY_ID",
-			"TIME_PERIOD",
-			"OBS_VALUE",
-			"UNIT_MEASURE",
-			"OBS_STATUS",
-			"CONF_STATUS",
-			"COMMENT_OBS",
-			"FACILITY_TYPE",
-			"FACILITY_NAME",
-		],
-	];
+	const mapping = buildEvoToSdmxMap(mapProductFlows.rows);
+	console.log(
+		"EVO to SDMX mapping built with",
+		Object.keys(mapping).length,
+		"entries"
+	);
+	const outputRows = [outputColumnHead.evoToSdmx];
 
 	let read = 0;
 	let written = 0;
@@ -528,9 +486,9 @@ function buildEvoKey(datatype, product, item1, item2) {
 function sdmxMonthToEvo(timePeriod) {
 	const [year, month] = timePeriod.split("-");
 	if (!year || !month) return timePeriod;
-	const months = dateMapping && dateMapping.months;
+	const months = dateConst && dateConst.months;
 	if (!months) {
-		throw new Error("Date mapping not loaded");
+		throw new Error("Date constants not loaded");
 	}
 	return months[month] ? `${months[month]}${year}` : timePeriod;
 }
@@ -540,9 +498,9 @@ function evoMonthToSdmx(evoTime) {
 	if (trimmed.length < 7) return evoTime;
 	const mon = trimmed.slice(0, 3);
 	const year = trimmed.slice(trimmed.length - 4);
-	const months = dateMapping && dateMapping.months;
+	const months = dateConst && dateConst.months;
 	if (!months) {
-		throw new Error("Date mapping not loaded");
+		throw new Error("Date constants not loaded");
 	}
 	const reversed = {};
 	for (const k in months) {

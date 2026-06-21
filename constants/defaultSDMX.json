@@ -1,0 +1,12 @@
+{
+	"sdmx": {
+		"PLANT_TECH": "_Z",
+		"PLANT_TYPE": "_Z",
+		"STOCKS": "_Z",
+		"INFRASTRUCTURE_IND": "_Z",
+		"VIS_A_VIS_AREA": "_Z",
+		"FACILITY_ID": "_Z",
+		"OBS_STATUS": "A",
+		"CONF_STATUS": "F"
+	}
+}
