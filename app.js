@@ -20,7 +20,6 @@ window.addEventListener("DOMContentLoaded", () => {
 	loadVersion();
 	loadDateConstants();
 	loadOutputColumnHead();
-	loadRequiredColumns();
 	loadProductFlowsMapping();
 });
 
@@ -99,20 +98,6 @@ async function loadOutputColumnHead() {
 		outputColumnHead = await response.json();
 	} catch (err) {
 		resultStatus.textContent = `Failed to load output rows: ${err.message}`;
-	}
-}
-
-async function loadRequiredColumns() {
-	try {
-		const response = await fetch("constants/requiredColumns.json");
-		if (!response.ok) {
-			throw new Error(
-				`Unable to fetch required columns: ${response.status} ${response.statusText}`
-			);
-		}
-		requiredColumns = await response.json();
-	} catch (err) {
-		resultStatus.textContent = `Failed to load required columns: ${err.message}`;
 	}
 }
 
@@ -196,13 +181,6 @@ function convertSdmxToEvo(text, mapProductFlows) {
 
 	const header = rows[0].map((cell) => cell.trim().toUpperCase());
 	const idx = arrayToIndex(header);
-	const required = requiredColumns.sdmxToEvo;
-
-	required.forEach((name) => {
-		if (!(name in idx)) {
-			throw new Error(`SDMX input missing required column: ${name}`);
-		}
-	});
 
 	const mapping = buildSdmxToEvoMap(mapProductFlows.rows);
 	const outputRows = [outputColumnHead.sdmxToEvo];
@@ -260,7 +238,6 @@ function convertSdmxToEvo(text, mapProductFlows) {
 }
 
 function convertEvoToSdmx(text, mapProductFlows) {
-	console.log("Starting EVO to SDMX conversion");
 	const rows = parseCsv(text, ",");
 	if (rows.length < 2) {
 		throw new Error(
@@ -269,21 +246,8 @@ function convertEvoToSdmx(text, mapProductFlows) {
 	}
 
 	const header = rows[0].map((cell) => cell.trim().toUpperCase());
-	console.log("EVO input header columns:", header);
 	const idx = arrayToIndex(header);
-	const required = requiredColumns.evoToSdmx;
-	required.forEach((name) => {
-		if (!(name in idx)) {
-			throw new Error(`EVO input missing required column: ${name}`);
-		}
-	});
-
 	const mapping = buildEvoToSdmxMap(mapProductFlows.rows);
-	console.log(
-		"EVO to SDMX mapping built with",
-		Object.keys(mapping).length,
-		"entries"
-	);
 	const outputRows = [outputColumnHead.evoToSdmx];
 
 	let read = 0;
