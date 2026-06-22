@@ -12,6 +12,8 @@ let downloadFileName = "converted.csv";
 
 let dateConst = null;
 let outputColumnHead = null;
+let countryMap = null;
+let dataSetMap = null;
 
 let mapProductFlows = null;
 let inputFile = null;
@@ -21,6 +23,9 @@ window.addEventListener("DOMContentLoaded", () => {
 	loadDateConstants();
 	loadOutputColumnHead();
 	loadProductFlowsMapping();
+	loadDefaultValues();
+	loadCountryMapping();
+	loadDataSetMappingCsv();
 });
 
 downloadButton.addEventListener("click", () => {
@@ -45,14 +50,14 @@ inputFileInput.addEventListener("change", () => {
 
 async function loadProductFlowsMapping() {
 	try {
-		const response = await fetch("mappings/mapProductFlows.csv");
+		const response = await fetch("mappings/productFlows.csv");
 		if (!response.ok) {
 			throw new Error(
 				`Unable to fetch mapping: ${response.status} ${response.statusText}`
 			);
 		}
 		const text = await response.text();
-		mapProductFlows = parseMappingCsv(text);
+		mapProductFlows = parseProductFlowsMappingCsv(text);
 		mappingStatus.textContent = `Product flows mapping loaded: ${mapProductFlows.rows.length} rows.`;
 	} catch (err) {
 		mapProductFlows = null;
@@ -101,6 +106,44 @@ async function loadOutputColumnHead() {
 	}
 }
 
+async function loadDefaultValues() {
+	const response = await fetch("constants/defaultValues.json");
+	if (!response.ok) {
+		throw new Error(
+			`Unable to fetch default values: ${response.status} ${response.statusText}`
+		);
+	}
+	const defaultValues = await response.json();
+	const evoToSdmxDefaults = defaultValues.evoToSdmx || {};
+}
+
+async function loadCountryMapping() {
+	const response = await fetch("constants/countries.json");
+	if (!response.ok) {
+		throw new Error(
+			`Unable to fetch country mapping: ${response.status} ${response.statusText}`
+		);
+	}
+	countryMap = await response.json();
+}
+
+async function loadDataSetMappingCsv() {
+	try {
+		const response = await fetch("mappings/datasets.csv");
+		if (!response.ok) {
+			throw new Error(
+				`Unable to fetch dataset mapping: ${response.status} ${response.statusText}`
+			);
+		}
+		const text = await response.text();
+		dataSetMap = parseDataSetMappingCsv(text);
+	} catch (err) {
+		dataSetMap = null;
+		mappingStatus.textContent = `Failed to load dataset mapping: ${err.message}`;
+		resultStatus.textContent = `Dataset mapping failed: ${err.message}`;
+	}
+}
+
 convertButton.addEventListener("click", async () => {
 	if (!mapProductFlows || !inputFile) {
 		return;
@@ -135,7 +178,7 @@ function updateButtonState() {
 	convertButton.disabled = !mapProductFlows || !inputFile;
 }
 
-function parseMappingCsv(csvText) {
+function parseProductFlowsMappingCsv(csvText) {
 	const rows = parseCsv(csvText, ",");
 	if (rows.length < 2) return null;
 
@@ -171,6 +214,30 @@ function parseMappingCsv(csvText) {
 	return map;
 }
 
+function parseDataSetMappingCsv(csvText) {
+	const rows = parseCsv(csvText, ",");
+	if (rows.length < 2) return null;
+	const header = rows[0].map((h) => h.trim().toUpperCase());
+	const idx = arrayToIndex(header);
+	const map = {};
+	for (let i = 1; i < rows.length; i += 1) {
+		const row = rows[i];
+		if (row.every((cell) => !cell.trim())) continue;
+		const key = getField(row, idx, "QUEST");
+		const questSource = getField(row, idx, "QUEST_SOURCE");
+		const dataflow = getField(row, idx, "DATAFLOW");
+		const freq = getField(row, idx, "FREQ");
+		if (key && questSource) {
+			map[key] = {
+				QUEST_SOURCE: questSource.trim(),
+				DATAFLOW: dataflow.trim(),
+				FREQ: freq.trim(),
+			};
+		}
+	}
+	return map;
+}
+
 function convertSdmxToEvo(text, mapProductFlows) {
 	const rows = parseCsv(text, ";");
 	if (rows.length < 2) {
@@ -203,6 +270,17 @@ function convertSdmxToEvo(text, mapProductFlows) {
 		const measureValueType = getField(row, idx, "MEASURE_VALUE_TYPE");
 		const unitMeasure = getField(row, idx, "UNIT_MEASURE");
 
+		console.log(
+			energyProduct,
+			mainFlow,
+			flowBreakdown,
+			plantType,
+			stocks,
+			visAVisArea,
+			measureValueType,
+			unitMeasure
+		);
+
 		const key = buildSdmxKey(
 			energyProduct,
 			mainFlow,
@@ -219,15 +297,14 @@ function convertSdmxToEvo(text, mapProductFlows) {
 			continue;
 		}
 
-		const timeStr = sdmxMonthToEvo(getField(row, idx, "TIME_PERIOD"));
 		outputRows.push([
-			getField(row, idx, "REF_AREA"),
-			getField(row, idx, "QUEST_SOURCE"),
+			refAreaToCountry(getField(row, idx, "REF_AREA")),
+			questSourceToQuest(getField(row, idx, "QUEST_SOURCE")),
 			mapped.datatype,
 			mapped.product,
 			mapped.item1,
 			mapped.item2,
-			timeStr,
+			sdmxMonthToEvo(getField(row, idx, "TIME_PERIOD")),
 			getField(row, idx, "OBS_VALUE"),
 			getField(row, idx, "OBS_STATUS"),
 		]);
@@ -271,11 +348,19 @@ function convertEvoToSdmx(text, mapProductFlows) {
 			continue;
 		}
 
+		const questSource = getDatasetValue(
+			"QUEST_SOURCE",
+			getField(row, idx, "QUEST")
+		);
+		const dataflow = getDatasetValue("DATAFLOW", getField(row, idx, "QUEST"));
+		const freq = getDatasetValue("FREQ", getField(row, idx, "QUEST"));
+		const country = countryToRefArea(getField(row, idx, "COUNTRY"));
+
 		outputRows.push([
-			"",
-			getField(row, idx, "QUEST"),
-			getField(row, idx, "COUNTRY"),
-			"M",
+			dataflow,
+			questSource,
+			country,
+			freq,
 			mapped.energyProduct,
 			mapped.mainFlow,
 			mapped.flowBreakdown,
@@ -413,6 +498,13 @@ function arrayToIndex(array) {
 	}, {});
 }
 
+function getDatasetValue(fieldName, quest) {
+	if (!dataSetMap) return "";
+	return quest && dataSetMap[quest] && dataSetMap[quest][fieldName]
+		? dataSetMap[quest][fieldName]
+		: "";
+}
+
 function getField(row, idx, name) {
 	const index = idx[name];
 	if (index === undefined || index < 0 || index >= row.length) return "";
@@ -473,4 +565,24 @@ function evoMonthToSdmx(evoTime) {
 		}
 	}
 	return reversed[mon] ? `${year}-${reversed[mon]}` : evoTime;
+}
+
+function refAreaToCountry(refArea) {
+	const country = Object.keys(countryMap).find(
+		(key) => countryMap[key] === refArea.trim()
+	);
+	return country || "";
+}
+
+function questSourceToQuest(questSource) {
+	if (!dataSetMap) return "";
+	const qs = (questSource || "").trim();
+	const quest = Object.keys(dataSetMap).find(
+		(key) => dataSetMap[key] && dataSetMap[key].questSource === qs
+	);
+	return quest || "";
+}
+
+function countryToRefArea(country) {
+	return countryMap[country] || "";
 }

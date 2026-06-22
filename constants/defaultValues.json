@@ -1,5 +1,5 @@
 {
-	"sdmx": {
+	"evoToSdmx": {
 		"PLANT_TECH": "_Z",
 		"PLANT_TYPE": "_Z",
 		"STOCKS": "_Z",
