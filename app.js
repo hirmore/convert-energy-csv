@@ -14,6 +14,7 @@ let dateConst = null;
 let outputColumnHead = null;
 let countryMap = null;
 let dataSetMap = null;
+let evoToSdmxDefaults = null;
 
 let mapProductFlows = null;
 let inputFile = null;
@@ -114,7 +115,7 @@ async function loadDefaultValues() {
 		);
 	}
 	const defaultValues = await response.json();
-	const evoToSdmxDefaults = defaultValues.evoToSdmx || {};
+	evoToSdmxDefaults = defaultValues.evoToSdmx || {};
 }
 
 async function loadCountryMapping() {
@@ -169,7 +170,7 @@ convertButton.addEventListener("click", async () => {
 	outputText.value = result.csv;
 	resultStatus.textContent = `Rows read: ${result.read}, rows written: ${result.written}, skipped: ${result.skipped}`;
 	downloadBlob = new Blob([result.csv], { type: "text/csv;charset=utf-8;" });
-	downloadFileName = `converted-${direction}.csv`;
+	downloadFileName = `${inputFile.name}-${direction}.csv`;
 	downloadButton.classList.remove("hidden");
 	downloadButton.disabled = false;
 });
@@ -364,18 +365,18 @@ function convertEvoToSdmx(text, mapProductFlows) {
 			mapped.energyProduct,
 			mapped.mainFlow,
 			mapped.flowBreakdown,
-			"_Z",
+			getDefaultSdmxValue("PLANT_TECH"),
 			mapped.plantType,
 			mapped.stocks,
-			"_Z",
+			getDefaultSdmxValue("STOCKS"),
 			mapped.visAVisArea,
 			mapped.measureValueType,
-			"_Z",
+			getDefaultSdmxValue("FACILITY_ID"),
 			evoMonthToSdmx(getField(row, idx, "TIME")),
 			getField(row, idx, "VALUE"),
 			mapped.unitMeasure,
-			getField(row, idx, "FLAG"),
-			"F",
+			getFlagValue(getField(row, idx, "FLAG")),
+			getDefaultSdmxValue("CONF_STATUS"),
 			"",
 			"",
 			"",
@@ -509,6 +510,16 @@ function getField(row, idx, name) {
 	const index = idx[name];
 	if (index === undefined || index < 0 || index >= row.length) return "";
 	return (row[index] || "").trim();
+}
+
+function getFlagValue(fieldValue) {
+	if (!evoToSdmxDefaults) return "";
+	return fieldValue || evoToSdmxDefaults["OBS_STATUS"] || "";
+}
+
+function getDefaultSdmxValue(fieldName) {
+	if (!evoToSdmxDefaults) return "";
+	return evoToSdmxDefaults[fieldName] || "";
 }
 
 function buildSdmxKey(
