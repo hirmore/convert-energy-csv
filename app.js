@@ -170,7 +170,8 @@ convertButton.addEventListener("click", async () => {
 	outputText.value = result.csv;
 	resultStatus.textContent = `Rows read: ${result.read}, rows written: ${result.written}, skipped: ${result.skipped}`;
 	downloadBlob = new Blob([result.csv], { type: "text/csv;charset=utf-8;" });
-	downloadFileName = `${inputFile.name}-${direction}.csv`;
+	const outFilePart = inputFile.name.replace(/\.[^./\\]+$/, "");
+	downloadFileName = `${outFilePart}-${direction}.csv`;
 	downloadButton.classList.remove("hidden");
 	downloadButton.disabled = false;
 });
@@ -327,6 +328,7 @@ function convertEvoToSdmx(text, mapProductFlows) {
 	const idx = arrayToIndex(header);
 	const mapping = buildEvoToSdmxMap(mapProductFlows.rows);
 	const outputRows = [outputColumnHead.evoToSdmx];
+	const skippedRows = [outputColumnHead.sdmxToEvo];
 
 	let read = 0;
 	let written = 0;
@@ -345,6 +347,7 @@ function convertEvoToSdmx(text, mapProductFlows) {
 		);
 		const mapped = mapping[key];
 		if (!mapped) {
+			skippedRows.push(row);
 			skipped += 1;
 			continue;
 		}
@@ -384,7 +387,13 @@ function convertEvoToSdmx(text, mapProductFlows) {
 		written += 1;
 	}
 
-	return { csv: serializeCsv(outputRows, ";"), read, written, skipped };
+	return {
+		csv: serializeCsv(outputRows, ";"),
+		read,
+		written,
+		skipped,
+		skippedRows: serializeCsv(skippedRows, ","),
+	};
 }
 
 function buildSdmxToEvoMap(rows) {
