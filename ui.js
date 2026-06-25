@@ -7,6 +7,7 @@ const resultStatus = document.getElementById("resultStatus");
 const outputText = document.getElementById("outputText");
 const downloadButton = document.getElementById("downloadButton");
 const downloadSkippedButton = document.getElementById("downloadSkippedButton");
+const toggleOutputButton = document.getElementById("toggleOutputButton");
 
 export function bindInputFileChange(handler) {
 	inputFileInput.addEventListener("change", () => {
@@ -24,6 +25,10 @@ export function bindDownloadClick(handler) {
 
 export function bindDownloadSkippedClick(handler) {
 	downloadSkippedButton.addEventListener("click", handler);
+}
+
+export function bindToggleOutputClick(handler) {
+	toggleOutputButton.addEventListener("click", handler);
 }
 
 export function setVersion(version) {
@@ -62,6 +67,12 @@ export function setSkippedDownloadReady() {
 	downloadSkippedButton.disabled = false;
 }
 
+export function setToggleOutputReady(label) {
+	toggleOutputButton.classList.remove("hidden");
+	toggleOutputButton.disabled = false;
+	toggleOutputButton.textContent = label;
+}
+
 export function hideDownloadButton() {
 	downloadButton.classList.add("hidden");
 	downloadButton.disabled = true;
@@ -70,6 +81,11 @@ export function hideDownloadButton() {
 export function hideSkippedDownloadButton() {
 	downloadSkippedButton.classList.add("hidden");
 	downloadSkippedButton.disabled = true;
+}
+
+export function hideToggleOutputButton() {
+	toggleOutputButton.classList.add("hidden");
+	toggleOutputButton.disabled = true;
 }
 
 export function getSelectedDirection() {

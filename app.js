@@ -19,6 +19,7 @@ import {
 	bindConvertClick,
 	bindDownloadClick,
 	bindDownloadSkippedClick,
+	bindToggleOutputClick,
 	setVersion,
 	setMappingStatus,
 	setInputStatus,
@@ -27,8 +28,10 @@ import {
 	setConvertEnabled,
 	setDownloadReady,
 	setSkippedDownloadReady,
+	setToggleOutputReady,
 	hideDownloadButton,
 	hideSkippedDownloadButton,
+	hideToggleOutputButton,
 	getSelectedDirection,
 } from "./ui.js";
 
@@ -36,6 +39,9 @@ let downloadBlob = null;
 let downloadFileName = "converted.csv";
 let skippedBlob = null;
 let skippedFileName = "skipped-rows.csv";
+let convertedCsv = null;
+let skippedCsv = null;
+let showingSkipped = false;
 
 let dateConst = null;
 let outputColumnHead = null;
@@ -73,8 +79,10 @@ window.addEventListener("DOMContentLoaded", () => {
 	bindConvertClick(handleConvertClick);
 	bindDownloadClick(handleDownloadClick);
 	bindDownloadSkippedClick(handleDownloadSkippedClick);
+	bindToggleOutputClick(handleToggleOutputClick);
 	hideDownloadButton();
 	hideSkippedDownloadButton();
+	hideToggleOutputButton();
 });
 
 async function loadProductFlowsMapping() {
@@ -161,20 +169,26 @@ async function handleConvertClick() {
 		return;
 	}
 
-	setOutputText(result.csv);
+	convertedCsv = result.csv;
+	skippedCsv = result.skipped > 0 && result.skippedRows ? result.skippedRows : null;
+	showingSkipped = false;
+
+	setOutputText(convertedCsv);
 	setResultStatus(`Rows read: ${result.read}, rows written: ${result.written}, skipped: ${result.skipped}`);
-	downloadBlob = new Blob([result.csv], { type: "text/csv;charset=utf-8;" });
+	downloadBlob = new Blob([convertedCsv], { type: "text/csv;charset=utf-8;" });
 	const outFilePart = inputFile.name.replace(/\.[^./\\]+$/, "");
 	downloadFileName = `${outFilePart}-${direction}.csv`;
 	setDownloadReady();
 
-	if (result.skipped > 0 && result.skippedRows) {
-		skippedBlob = new Blob([result.skippedRows], { type: "text/csv;charset=utf-8;" });
+	if (skippedCsv) {
+		skippedBlob = new Blob([skippedCsv], { type: "text/csv;charset=utf-8;" });
 		skippedFileName = `${outFilePart}-${direction}-skipped.csv`;
 		setSkippedDownloadReady();
+		setToggleOutputReady("Show skipped rows");
 	} else {
 		skippedBlob = null;
 		hideSkippedDownloadButton();
+		hideToggleOutputButton();
 	}
 }
 
@@ -196,6 +210,19 @@ function handleDownloadSkippedClick() {
 	a.download = skippedFileName;
 	a.click();
 	URL.revokeObjectURL(url);
+}
+
+function handleToggleOutputClick() {
+	if (!skippedCsv) return;
+	showingSkipped = !showingSkipped;
+
+	if (showingSkipped) {
+		setOutputText(skippedCsv);
+		setToggleOutputReady("Show converted rows");
+	} else {
+		setOutputText(convertedCsv);
+		setToggleOutputReady("Show skipped rows");
+	}
 }
 
 function handleInputFileChange(file) {
