@@ -6,6 +6,7 @@ const inputStatus = document.getElementById("inputStatus");
 const resultStatus = document.getElementById("resultStatus");
 const outputText = document.getElementById("outputText");
 const downloadButton = document.getElementById("downloadButton");
+const downloadSkippedButton = document.getElementById("downloadSkippedButton");
 
 export function bindInputFileChange(handler) {
 	inputFileInput.addEventListener("change", () => {
@@ -19,6 +20,10 @@ export function bindConvertClick(handler) {
 
 export function bindDownloadClick(handler) {
 	downloadButton.addEventListener("click", handler);
+}
+
+export function bindDownloadSkippedClick(handler) {
+	downloadSkippedButton.addEventListener("click", handler);
 }
 
 export function setVersion(version) {
@@ -52,9 +57,19 @@ export function setDownloadReady() {
 	downloadButton.disabled = false;
 }
 
+export function setSkippedDownloadReady() {
+	downloadSkippedButton.classList.remove("hidden");
+	downloadSkippedButton.disabled = false;
+}
+
 export function hideDownloadButton() {
 	downloadButton.classList.add("hidden");
 	downloadButton.disabled = true;
+}
+
+export function hideSkippedDownloadButton() {
+	downloadSkippedButton.classList.add("hidden");
+	downloadSkippedButton.disabled = true;
 }
 
 export function getSelectedDirection() {

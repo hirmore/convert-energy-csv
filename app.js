@@ -18,6 +18,7 @@ import {
 	bindInputFileChange,
 	bindConvertClick,
 	bindDownloadClick,
+	bindDownloadSkippedClick,
 	setVersion,
 	setMappingStatus,
 	setInputStatus,
@@ -25,12 +26,16 @@ import {
 	setOutputText,
 	setConvertEnabled,
 	setDownloadReady,
+	setSkippedDownloadReady,
 	hideDownloadButton,
+	hideSkippedDownloadButton,
 	getSelectedDirection,
 } from "./ui.js";
 
 let downloadBlob = null;
 let downloadFileName = "converted.csv";
+let skippedBlob = null;
+let skippedFileName = "skipped-rows.csv";
 
 let dateConst = null;
 let outputColumnHead = null;
@@ -67,7 +72,9 @@ window.addEventListener("DOMContentLoaded", () => {
 	bindInputFileChange(handleInputFileChange);
 	bindConvertClick(handleConvertClick);
 	bindDownloadClick(handleDownloadClick);
+	bindDownloadSkippedClick(handleDownloadSkippedClick);
 	hideDownloadButton();
+	hideSkippedDownloadButton();
 });
 
 async function loadProductFlowsMapping() {
@@ -160,6 +167,15 @@ async function handleConvertClick() {
 	const outFilePart = inputFile.name.replace(/\.[^./\\]+$/, "");
 	downloadFileName = `${outFilePart}-${direction}.csv`;
 	setDownloadReady();
+
+	if (result.skipped > 0 && result.skippedRows) {
+		skippedBlob = new Blob([result.skippedRows], { type: "text/csv;charset=utf-8;" });
+		skippedFileName = `${outFilePart}-${direction}-skipped.csv`;
+		setSkippedDownloadReady();
+	} else {
+		skippedBlob = null;
+		hideSkippedDownloadButton();
+	}
 }
 
 function handleDownloadClick() {
@@ -168,6 +184,16 @@ function handleDownloadClick() {
 	const a = document.createElement("a");
 	a.href = url;
 	a.download = downloadFileName;
+	a.click();
+	URL.revokeObjectURL(url);
+}
+
+function handleDownloadSkippedClick() {
+	if (!skippedBlob) return;
+	const url = URL.createObjectURL(skippedBlob);
+	const a = document.createElement("a");
+	a.href = url;
+	a.download = skippedFileName;
 	a.click();
 	URL.revokeObjectURL(url);
 }
