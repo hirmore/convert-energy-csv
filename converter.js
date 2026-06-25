@@ -55,6 +55,7 @@ export function convertSdmxToEvo(text, mapProductFlows) {
 
 	const mapping = buildSdmxToEvoMap(mapProductFlows.rows);
 	const outputRows = [converterState.outputColumnHead.sdmxToEvo];
+	const skippedRows = [converterState.outputColumnHead.sdmxToEvo];
 	const constants = initEvoConstants(rows[1], idx);
 
 	let read = 0;
@@ -71,6 +72,7 @@ export function convertSdmxToEvo(text, mapProductFlows) {
 		const key = buildSdmxKey(sdmxFields);
 		const mapped = mapping[key];
 		if (!mapped) {
+			skippedRows.push(row);
 			skipped += 1;
 			continue;
 		}
@@ -89,7 +91,13 @@ export function convertSdmxToEvo(text, mapProductFlows) {
 		written += 1;
 	}
 
-	return { csv: serializeCsv(outputRows, ","), read, written, skipped };
+	return {
+		csv: serializeCsv(outputRows, ";"),
+		read,
+		written,
+		skipped,
+		skippedRows: serializeCsv(skippedRows, ","),
+	};
 }
 
 export function convertEvoToSdmx(text, mapProductFlows) {
