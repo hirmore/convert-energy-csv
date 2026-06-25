@@ -22,14 +22,14 @@ const SDMX_KEY_FIELDS = [
 /**
  * Initialize converter state from app context
  */
-export let converterState = {
+export let converterState = Object.freeze({
 	outputColumnHead: null,
 	dateConst: null,
 	evoToSdmxDefaults: null,
 	dataSetMap: null,
 	countryMap: null,
 	refAreaMap: null,
-};
+});
 
 export function initConverterState(state) {
 	converterState = { ...converterState, ...state };
@@ -255,4 +255,20 @@ function questSourceToQuest(questSource) {
 			converterState.dataSetMap[key] &&
 			converterState.dataSetMap[key].QUEST_SOURCE === qs
 	);
+}
+
+export function getRequiredColumnsForDirection(direction) {
+	if (direction === "sdmxToEvo") {
+		return SDMX_KEY_FIELDS;
+	} else {
+		return EVO_KEY_FIELDS;
+	}
+}
+
+export function getInputHeaderFields(inputText, delimiter) {
+	const rows = parseCsv(inputText, delimiter);
+	if (rows.length < 1) {
+		throw new Error("Input file must contain a header row.");
+	}
+	return rows[0].map((cell) => cell.trim().toUpperCase());
 }

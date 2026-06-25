@@ -3,6 +3,8 @@ import {
 	convertEvoToSdmx,
 	initConverterState,
 	buildCountryReverseMap,
+	getInputHeaderFields,
+	getRequiredColumnsForDirection,
 } from "./converter.js";
 import {
 	loadVersion as fetchVersion,
@@ -241,14 +243,75 @@ function handleToggleOutputClick() {
 	}
 }
 
-function handleInputFileChange(file) {
+function resetConversionState() {
+	downloadBlob = null;
+	skippedBlob = null;
+
+	convertedCsv = null;
+	skippedCsv = null;
+
+	showingSkipped = false;
+
+	setOutputText("");
+
+	setRowsRead(0);
+	setRowsWritten(0);
+	setRowsSkipped(0);
+
+	setConversionStatus("");
+	setResultStatus("");
+
+	hideDownloadButton();
+	hideSkippedDownloadButton();
+	hideToggleOutputButton();
+}
+
+function validateRequiredColumns(header, requiredFields) {
+	const headerSet = new Set(header.map((col) => col.trim().toUpperCase()));
+
+	const missing = requiredFields.filter(
+		(field) => !headerSet.has(field.toUpperCase())
+	);
+
+	return {
+		valid: missing.length === 0,
+		missing,
+	};
+}
+
+async function validateRequiredColumnsForSelectedDirection() {
+	const text = await inputFile.text();
+
+	const delimiter = selectedDirection === "sdmxToEvo" ? ";" : ",";
+	const header = getInputHeaderFields(text, delimiter);
+
+	const requiredFields = getRequiredColumnsForDirection(selectedDirection);
+
+	return validateRequiredColumns(header, requiredFields);
+}
+
+async function handleInputFileChange(file) {
+	resetConversionState();
+
 	inputFile = file;
 	if (inputFile) {
 		setInputStatus(`Input file selected: ${inputFile.name}`);
 	} else {
 		setInputStatus("No input file selected.");
 	}
-	updateButtonState();
+
+	const validation = await validateRequiredColumnsForSelectedDirection();
+
+	if (validation.valid) {
+		updateButtonState();
+	} else {
+		setConvertEnabled(false);
+		setResultStatus(
+			`Input file is missing required columns for ${selectedDirection} conversion. Missing: ${validation.missing.join(
+				", "
+			)}`
+		);
+	}
 }
 
 function handleDirectionButtonClick(direction) {
