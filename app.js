@@ -13,17 +13,21 @@ import {
 	loadCountryMapping as fetchCountryMapping,
 	loadDataSetMapping as fetchDataSetMapping,
 	loadProductFlowsMapping as fetchProductFlowsMapping,
-	buildReverseMap,
 } from "./loader.js";
-
-const inputFileInput = document.getElementById("inputFile");
-const convertButton = document.getElementById("convertButton");
-const versionInfo = document.getElementById("versionInfo");
-const mappingStatus = document.getElementById("mappingStatus");
-const inputStatus = document.getElementById("inputStatus");
-const resultStatus = document.getElementById("resultStatus");
-const outputText = document.getElementById("outputText");
-const downloadButton = document.getElementById("downloadButton");
+import {
+	bindInputFileChange,
+	bindConvertClick,
+	bindDownloadClick,
+	setVersion,
+	setMappingStatus,
+	setInputStatus,
+	setResultStatus,
+	setOutputText,
+	setConvertEnabled,
+	setDownloadReady,
+	hideDownloadButton,
+	getSelectedDirection,
+} from "./ui.js";
 
 let downloadBlob = null;
 let downloadFileName = "converted.csv";
@@ -59,36 +63,21 @@ window.addEventListener("DOMContentLoaded", () => {
 	loadDefaultValues();
 	loadCountryMapping();
 	loadDataSetMappingCsv();
-});
 
-downloadButton.addEventListener("click", () => {
-	if (!downloadBlob) return;
-	const url = URL.createObjectURL(downloadBlob);
-	const a = document.createElement("a");
-	a.href = url;
-	a.download = downloadFileName;
-	a.click();
-	URL.revokeObjectURL(url);
-});
-
-inputFileInput.addEventListener("change", () => {
-	inputFile = inputFileInput.files[0] || null;
-	if (inputFile) {
-		inputStatus.textContent = `Input file selected: ${inputFile.name}`;
-	} else {
-		inputStatus.textContent = "No input file selected.";
-	}
-	updateButtonState();
+	bindInputFileChange(handleInputFileChange);
+	bindConvertClick(handleConvertClick);
+	bindDownloadClick(handleDownloadClick);
+	hideDownloadButton();
 });
 
 async function loadProductFlowsMapping() {
 	try {
 		mapProductFlows = await fetchProductFlowsMapping();
-		mappingStatus.textContent = `Product flows mapping loaded: ${mapProductFlows.rows.length} rows.`;
+		setMappingStatus(`Product flows mapping loaded: ${mapProductFlows.rows.length} rows.`);
 	} catch (err) {
 		mapProductFlows = null;
-		mappingStatus.textContent = `Failed to load product flows mapping: ${err.message}`;
-		resultStatus.textContent = `Product flows mapping failed: ${err.message}`;
+		setMappingStatus(`Failed to load product flows mapping: ${err.message}`);
+		setResultStatus(`Product flows mapping failed: ${err.message}`);
 	}
 	updateButtonState();
 }
@@ -96,9 +85,9 @@ async function loadProductFlowsMapping() {
 async function loadVersion() {
 	try {
 		const version = await fetchVersion();
-		versionInfo.textContent = `Version: ${version}`;
+		setVersion(version);
 	} catch (err) {
-		versionInfo.textContent = "Version unavailable";
+		setVersion("unknown");
 	}
 }
 
@@ -106,7 +95,7 @@ async function loadDateConstants() {
 	try {
 		dateConst = await fetchDateConstants();
 	} catch (err) {
-		resultStatus.textContent = `Failed to load date constants: ${err.message}`;
+		setResultStatus(`Failed to load date constants: ${err.message}`);
 	}
 }
 
@@ -114,7 +103,7 @@ async function loadOutputColumnHead() {
 	try {
 		outputColumnHead = await fetchOutputColumnHead();
 	} catch (err) {
-		resultStatus.textContent = `Failed to load output rows: ${err.message}`;
+		setResultStatus(`Failed to load output rows: ${err.message}`);
 	}
 }
 
@@ -122,7 +111,7 @@ async function loadDefaultValues() {
 	try {
 		evoToSdmxDefaults = await fetchDefaultValues();
 	} catch (err) {
-		resultStatus.textContent = `Failed to load default values: ${err.message}`;
+		setResultStatus(`Failed to load default values: ${err.message}`);
 	}
 }
 
@@ -131,7 +120,7 @@ async function loadCountryMapping() {
 		countryMap = await fetchCountryMapping();
 		buildCountryReverseMap();
 	} catch (err) {
-		resultStatus.textContent = `Failed to load country mapping: ${err.message}`;
+		setResultStatus(`Failed to load country mapping: ${err.message}`);
 	}
 }
 
@@ -140,19 +129,17 @@ async function loadDataSetMappingCsv() {
 		dataSetMap = await fetchDataSetMapping();
 	} catch (err) {
 		dataSetMap = null;
-		mappingStatus.textContent = `Failed to load dataset mapping: ${err.message}`;
-		resultStatus.textContent = `Dataset mapping failed: ${err.message}`;
+		setMappingStatus(`Failed to load dataset mapping: ${err.message}`);
+		setResultStatus(`Dataset mapping failed: ${err.message}`);
 	}
 }
 
-convertButton.addEventListener("click", async () => {
+async function handleConvertClick() {
 	if (!mapProductFlows || !inputFile) {
 		return;
 	}
 
-	const direction = document.querySelector(
-		'input[name="direction"]:checked'
-	).value;
+	const direction = getSelectedDirection();
 	const inputText = await inputFile.text();
 	let result;
 
@@ -163,21 +150,40 @@ convertButton.addEventListener("click", async () => {
 			result = convertEvoToSdmx(inputText, mapProductFlows);
 		}
 	} catch (err) {
-		resultStatus.textContent = `Conversion failed: ${err.message}`;
+		setResultStatus(`Conversion failed: ${err.message}`);
 		return;
 	}
 
-	outputText.value = result.csv;
-	resultStatus.textContent = `Rows read: ${result.read}, rows written: ${result.written}, skipped: ${result.skipped}`;
+	setOutputText(result.csv);
+	setResultStatus(`Rows read: ${result.read}, rows written: ${result.written}, skipped: ${result.skipped}`);
 	downloadBlob = new Blob([result.csv], { type: "text/csv;charset=utf-8;" });
 	const outFilePart = inputFile.name.replace(/\.[^./\\]+$/, "");
 	downloadFileName = `${outFilePart}-${direction}.csv`;
-	downloadButton.classList.remove("hidden");
-	downloadButton.disabled = false;
-});
+	setDownloadReady();
+}
+
+function handleDownloadClick() {
+	if (!downloadBlob) return;
+	const url = URL.createObjectURL(downloadBlob);
+	const a = document.createElement("a");
+	a.href = url;
+	a.download = downloadFileName;
+	a.click();
+	URL.revokeObjectURL(url);
+}
+
+function handleInputFileChange(file) {
+	inputFile = file;
+	if (inputFile) {
+		setInputStatus(`Input file selected: ${inputFile.name}`);
+	} else {
+		setInputStatus("No input file selected.");
+	}
+	updateButtonState();
+}
 
 function updateButtonState() {
-	convertButton.disabled = !mapProductFlows || !inputFile;
+	setConvertEnabled(Boolean(mapProductFlows && inputFile));
 }
 
 function convertSdmxToEvo(text, mapProductFlows) {
