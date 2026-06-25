@@ -1,12 +1,20 @@
 import { parseCsv, serializeCsv, arrayToIndex, getField } from "./csv.js";
 import {
-	parseProductFlowsMappingCsv,
-	parseDataSetMappingCsv,
 	buildEvoToSdmxMap,
 	buildSdmxToEvoMap,
 	buildSdmxKey,
 	buildEvoKey,
 } from "./mappings.js";
+import {
+	loadVersion as fetchVersion,
+	loadDateConstants as fetchDateConstants,
+	loadOutputColumnHead as fetchOutputColumnHead,
+	loadDefaultValues as fetchDefaultValues,
+	loadCountryMapping as fetchCountryMapping,
+	loadDataSetMapping as fetchDataSetMapping,
+	loadProductFlowsMapping as fetchProductFlowsMapping,
+	buildReverseMap,
+} from "./loader.js";
 
 const inputFileInput = document.getElementById("inputFile");
 const convertButton = document.getElementById("convertButton");
@@ -75,14 +83,7 @@ inputFileInput.addEventListener("change", () => {
 
 async function loadProductFlowsMapping() {
 	try {
-		const response = await fetch("mappings/productFlows.csv");
-		if (!response.ok) {
-			throw new Error(
-				`Unable to fetch mapping: ${response.status} ${response.statusText}`
-			);
-		}
-		const text = await response.text();
-		mapProductFlows = parseProductFlowsMappingCsv(text);
+		mapProductFlows = await fetchProductFlowsMapping();
 		mappingStatus.textContent = `Product flows mapping loaded: ${mapProductFlows.rows.length} rows.`;
 	} catch (err) {
 		mapProductFlows = null;
@@ -94,76 +95,49 @@ async function loadProductFlowsMapping() {
 
 async function loadVersion() {
 	try {
-		const response = await fetch("version.json");
-		if (!response.ok) {
-			throw new Error(
-				`Unable to fetch version: ${response.status} ${response.statusText}`
-			);
-		}
-		const data = await response.json();
-		versionInfo.textContent = `Version: ${data.version || "unknown"}`;
+		const version = await fetchVersion();
+		versionInfo.textContent = `Version: ${version}`;
 	} catch (err) {
 		versionInfo.textContent = "Version unavailable";
 	}
 }
 
 async function loadDateConstants() {
-	const response = await fetch("constants/date.json");
-	if (!response.ok) {
-		throw new Error(
-			`Unable to fetch date constants: ${response.status} ${response.statusText}`
-		);
+	try {
+		dateConst = await fetchDateConstants();
+	} catch (err) {
+		resultStatus.textContent = `Failed to load date constants: ${err.message}`;
 	}
-	dateConst = await response.json();
 }
 
 async function loadOutputColumnHead() {
 	try {
-		const response = await fetch("constants/outputColumns.json");
-		if (!response.ok) {
-			throw new Error(
-				`Unable to fetch output rows: ${response.status} ${response.statusText}`
-			);
-		}
-		outputColumnHead = await response.json();
+		outputColumnHead = await fetchOutputColumnHead();
 	} catch (err) {
 		resultStatus.textContent = `Failed to load output rows: ${err.message}`;
 	}
 }
 
 async function loadDefaultValues() {
-	const response = await fetch("constants/defaultValues.json");
-	if (!response.ok) {
-		throw new Error(
-			`Unable to fetch default values: ${response.status} ${response.statusText}`
-		);
+	try {
+		evoToSdmxDefaults = await fetchDefaultValues();
+	} catch (err) {
+		resultStatus.textContent = `Failed to load default values: ${err.message}`;
 	}
-	const defaultValues = await response.json();
-	evoToSdmxDefaults = defaultValues.evoToSdmx || {};
 }
 
 async function loadCountryMapping() {
-	const response = await fetch("constants/countries.json");
-	if (!response.ok) {
-		throw new Error(
-			`Unable to fetch country mapping: ${response.status} ${response.statusText}`
-		);
+	try {
+		countryMap = await fetchCountryMapping();
+		buildCountryReverseMap();
+	} catch (err) {
+		resultStatus.textContent = `Failed to load country mapping: ${err.message}`;
 	}
-	countryMap = await response.json();
-
-	buildCountryReverseMap();
 }
 
 async function loadDataSetMappingCsv() {
 	try {
-		const response = await fetch("mappings/datasets.csv");
-		if (!response.ok) {
-			throw new Error(
-				`Unable to fetch dataset mapping: ${response.status} ${response.statusText}`
-			);
-		}
-		const text = await response.text();
-		dataSetMap = parseDataSetMappingCsv(text);
+		dataSetMap = await fetchDataSetMapping();
 	} catch (err) {
 		dataSetMap = null;
 		mappingStatus.textContent = `Failed to load dataset mapping: ${err.message}`;
