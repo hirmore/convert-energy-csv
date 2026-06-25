@@ -17,6 +17,7 @@ import {
 import {
 	bindInputFileChange,
 	bindConvertClick,
+	bindDirectionButtonClick,
 	bindDownloadClick,
 	bindDownloadSkippedClick,
 	bindToggleOutputClick,
@@ -32,7 +33,12 @@ import {
 	hideDownloadButton,
 	hideSkippedDownloadButton,
 	hideToggleOutputButton,
-	getSelectedDirection,
+	setDirectionButtons,
+	setMappingLoadedCount,
+	setRowsRead,
+	setRowsWritten,
+	setRowsSkipped,
+	setConversionStatus,
 } from "./ui.js";
 
 let downloadBlob = null;
@@ -52,6 +58,7 @@ let evoToSdmxDefaults = null;
 let mapProductFlows = null;
 let inputFile = null;
 let refAreaMap = null;
+let selectedDirection = "evoToSdmx";
 
 const EVO_KEY_FIELDS = ["DATATYPE", "PRODUCT", "ITEM1", "ITEM2"];
 
@@ -77,9 +84,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
 	bindInputFileChange(handleInputFileChange);
 	bindConvertClick(handleConvertClick);
+	bindDirectionButtonClick(handleDirectionButtonClick);
 	bindDownloadClick(handleDownloadClick);
 	bindDownloadSkippedClick(handleDownloadSkippedClick);
 	bindToggleOutputClick(handleToggleOutputClick);
+	setDirectionButtons(selectedDirection);
 	hideDownloadButton();
 	hideSkippedDownloadButton();
 	hideToggleOutputButton();
@@ -88,7 +97,9 @@ window.addEventListener("DOMContentLoaded", () => {
 async function loadProductFlowsMapping() {
 	try {
 		mapProductFlows = await fetchProductFlowsMapping();
-		setMappingStatus(`Product flows mapping loaded: ${mapProductFlows.rows.length} rows.`);
+		setMappingStatus(
+			`Product flows mapping loaded: ${mapProductFlows.rows.length} rows.`
+		);
 	} catch (err) {
 		mapProductFlows = null;
 		setMappingStatus(`Failed to load product flows mapping: ${err.message}`);
@@ -154,7 +165,7 @@ async function handleConvertClick() {
 		return;
 	}
 
-	const direction = getSelectedDirection();
+	const direction = selectedDirection;
 	const inputText = await inputFile.text();
 	let result;
 
@@ -170,11 +181,22 @@ async function handleConvertClick() {
 	}
 
 	convertedCsv = result.csv;
-	skippedCsv = result.skipped > 0 && result.skippedRows ? result.skippedRows : null;
+	skippedCsv =
+		result.skipped > 0 && result.skippedRows ? result.skippedRows : null;
 	showingSkipped = false;
 
 	setOutputText(convertedCsv);
-	setResultStatus(`Rows read: ${result.read}, rows written: ${result.written}, skipped: ${result.skipped}`);
+	setResultStatus(
+		`Rows read: ${result.read}, rows written: ${result.written}, skipped: ${result.skipped}`
+	);
+	setRowsRead(result.read);
+	setRowsWritten(result.written);
+	setRowsSkipped(result.skipped);
+	setConversionStatus(
+		result.skipped === 0
+			? "Conversion completed successfully!"
+			: "Conversion completed with skipped rows"
+	);
 	downloadBlob = new Blob([convertedCsv], { type: "text/csv;charset=utf-8;" });
 	const outFilePart = inputFile.name.replace(/\.[^./\\]+$/, "");
 	downloadFileName = `${outFilePart}-${direction}.csv`;
@@ -233,6 +255,11 @@ function handleInputFileChange(file) {
 		setInputStatus("No input file selected.");
 	}
 	updateButtonState();
+}
+
+function handleDirectionButtonClick(direction) {
+	selectedDirection = direction;
+	setDirectionButtons(direction);
 }
 
 function updateButtonState() {

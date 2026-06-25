@@ -20,39 +20,86 @@
             </div>
         </header>
 
-        <div id="mappingStatus" class="status hidden">Loading default mapping...</div>
+        <div class="dashboard-grid">
+            <div class="panel-left">
+                <section class="card controls-card">
+                    <div class="card-header">
+                        <h2>Conversion Controls</h2>
+                        <div class="direction-buttons">
+                            <button id="directionEvoToSdmx" class="direction-button active" type="button">ISO(EVO) →
+                                SDMX</button>
+                            <button id="directionSdmxToEvo" class="direction-button" type="button">SDMX →
+                                ISO(EVO)</button>
+                        </div>
+                    </div>
 
-        <section class="card">
-            <h2>Conversion</h2>
-            <div class="radio-group">
-                <label><input type="radio" name="direction" value="evoToSdmx" checked /> ISO(EVO) → SDMX</label>
-                <label><input type="radio" name="direction" value="sdmxToEvo" /> SDMX → ISO(EVO)</label>
+                    <div class="control-row">
+                        <label class="file-input-label">
+                            <input id="inputFile" type="file" accept=".csv" />
+                            Choose CSV file
+                        </label>
+                    </div>
+
+                    <div class="status-group">
+                        <span id="inputStatus" class="status">No input file selected.</span>
+                    </div>
+                </section>
+
+                <section class="card compact-action">
+                    <button id="convertButton" disabled class="primary-action">Convert CSV</button>
+                </section>
+
+                <section class="card summary-card">
+                    <div class="card-header">
+                        <h2>Conversion Summary</h2>
+                    </div>
+                    <div id="mappingStatus" class="status hidden">Loading default mapping...</div>
+                    <div id="resultStatus" class="status hidden"></div>
+                    <div class="summary-status">
+                        <span class="summary-label">Status</span>
+                        <strong id="conversionStatus">Ready</strong>
+                    </div>
+                    <div class="summary-grid hidden">
+                        <div class="summary-item">
+                            <span class="summary-label">Rows read</span>
+                            <strong id="rowsRead">0</strong>
+                        </div>
+                        <div class="summary-item positive">
+                            <span class="summary-label">Rows written</span>
+                            <strong id="rowsWritten">0</strong>
+                        </div>
+                        <div class="summary-item warning">
+                            <span class="summary-label">Rows skipped</span>
+                            <strong id="rowsSkipped">0</strong>
+                        </div>
+                        <div class="summary-item neutral">
+                            <span class="summary-label">Product flows mapping loaded</span>
+                            <strong id="mappingLoaded">0 rows</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="left-spacer"></div>
             </div>
-        </section>
 
-        <section class="card">
-            <h2>Upload</h2>
-            <label class="file-input-label">
-                <input id="inputFile" type="file" accept=".csv" />
-                Choose CSV file
-            </label>
-            <div id="inputStatus" class="status">No input file selected.</div>
-        </section>
-
-        <section class="card actions">
-            <button id="convertButton" disabled>Convert CSV</button>
-            <div id="resultStatus" class="status"></div>
-        </section>
-
-        <section class="card">
-            <div class="card-header">
-                <h2>Output</h2>
-                <button id="downloadButton" class="hidden" disabled>Save converted CSV</button>
-                <button id="downloadSkippedButton" class="hidden" disabled>Save skipped rows</button>
-                <button id="toggleOutputButton" class="hidden" disabled>Show skipped rows</button>
+            <div class="panel-right">
+                <section class="card preview-card">
+                    <div class="card-header preview-header">
+                        <h2>Output Preview</h2>
+                        <div class="preview-actions">
+                            <button id="toggleOutputButton" class="hidden" disabled>Show skipped rows</button>
+                        </div>
+                    </div>
+                    <textarea id="outputText" readonly></textarea>
+                    <div class="card-header preview-header">
+                        <div class="preview-actions">
+                            <button id="downloadButton" class="hidden" disabled>Download CSV</button>
+                            <button id="downloadSkippedButton" class="hidden" disabled>Download skipped rows</button>
+                        </div>
+                    </div>
+                </section>
             </div>
-            <textarea id="outputText" readonly></textarea>
-        </section>
+        </div>
     </main>
 
     <script type="module" src="app.js"></script>

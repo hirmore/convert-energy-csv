@@ -1,5 +1,7 @@
 const inputFileInput = document.getElementById("inputFile");
 const convertButton = document.getElementById("convertButton");
+const directionEvoToSdmx = document.getElementById("directionEvoToSdmx");
+const directionSdmxToEvo = document.getElementById("directionSdmxToEvo");
 const versionInfo = document.getElementById("versionInfo");
 const mappingStatus = document.getElementById("mappingStatus");
 const inputStatus = document.getElementById("inputStatus");
@@ -8,6 +10,11 @@ const outputText = document.getElementById("outputText");
 const downloadButton = document.getElementById("downloadButton");
 const downloadSkippedButton = document.getElementById("downloadSkippedButton");
 const toggleOutputButton = document.getElementById("toggleOutputButton");
+const rowsRead = document.getElementById("rowsRead");
+const rowsWritten = document.getElementById("rowsWritten");
+const rowsSkipped = document.getElementById("rowsSkipped");
+const conversionStatus = document.getElementById("conversionStatus");
+const mappingLoaded = document.getElementById("mappingLoaded");
 
 export function bindInputFileChange(handler) {
 	inputFileInput.addEventListener("change", () => {
@@ -17,6 +24,11 @@ export function bindInputFileChange(handler) {
 
 export function bindConvertClick(handler) {
 	convertButton.addEventListener("click", handler);
+}
+
+export function bindDirectionButtonClick(handler) {
+	directionEvoToSdmx.addEventListener("click", () => handler("evoToSdmx"));
+	directionSdmxToEvo.addEventListener("click", () => handler("sdmxToEvo"));
 }
 
 export function bindDownloadClick(handler) {
@@ -47,6 +59,31 @@ export function setInputStatus(text) {
 export function setResultStatus(text) {
 	resultStatus.textContent = text;
 	resultStatus.classList.remove("hidden");
+}
+
+export function setRowsRead(value) {
+	rowsRead.textContent = value;
+}
+
+export function setRowsWritten(value) {
+	rowsWritten.textContent = value;
+}
+
+export function setRowsSkipped(value) {
+	rowsSkipped.textContent = value;
+}
+
+export function setConversionStatus(text) {
+	conversionStatus.textContent = text;
+}
+
+export function setDirectionButtons(direction) {
+	directionEvoToSdmx.classList.toggle("active", direction === "evoToSdmx");
+	directionSdmxToEvo.classList.toggle("active", direction === "sdmxToEvo");
+}
+
+export function setMappingLoadedCount(count) {
+	mappingLoaded.textContent = `${count} rows`;
 }
 
 export function setOutputText(text) {
