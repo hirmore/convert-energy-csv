@@ -176,6 +176,12 @@ button:focus-visible,
     font-weight: 700;
 }
 
+#toggleOutputButton,
+#downloadSkippedButton,
+#downloadButton {
+    width: 222px;
+}
+
 .summary-card,
 .preview-card {
     display: flex;

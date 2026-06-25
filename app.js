@@ -82,9 +82,7 @@ window.addEventListener("DOMContentLoaded", () => {
 async function loadProductFlowsMapping() {
 	try {
 		mapProductFlows = await fetchProductFlowsMapping();
-		setMappingStatus(
-			`Product flows mapping loaded: ${mapProductFlows.rows.length} rows.`
-		);
+		// setMappingStatus( `Product flows mapping loaded: ${mapProductFlows.rows.length} rows.`);
 	} catch (err) {
 		mapProductFlows = null;
 		setMappingStatus(`Failed to load product flows mapping: ${err.message}`);
