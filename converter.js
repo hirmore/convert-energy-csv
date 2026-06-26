@@ -22,14 +22,14 @@ const SDMX_KEY_FIELDS = [
 /**
  * Initialize converter state from app context
  */
-export let converterState = Object.freeze({
+export let converterState = {
 	outputColumnHead: null,
 	dateConst: null,
 	evoToSdmxDefaults: null,
 	dataSetMap: null,
 	countryMap: null,
 	refAreaMap: null,
-});
+};
 
 export function initConverterState(state) {
 	converterState = { ...converterState, ...state };
