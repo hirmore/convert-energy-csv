@@ -68,9 +68,11 @@ export function convertSdmxToEvo(text, mapProductFlows) {
 	const mapping = buildSdmxToEvoMap(mapProductFlows.rows);
 	const outputRows = [converterState.outputColumnHead.sdmxToEvo];
 	const skippedRows = [converterState.outputColumnHead.evoToSdmx];
-	const constants = initEvoConstants(rows[1], idx);
-
-	validateConstants(constants, ["refArea", "quest", "time"]);
+	const constants = validateConstants(initEvoConstants(rows[1], idx), [
+		"refArea",
+		"quest",
+		"time",
+	]);
 
 	let read = 0;
 	let written = 0;
@@ -127,9 +129,11 @@ export function convertEvoToSdmx(text, mapProductFlows) {
 	const mapping = buildEvoToSdmxMap(mapProductFlows.rows);
 	const outputRows = [converterState.outputColumnHead.evoToSdmx];
 	const skippedRows = [converterState.outputColumnHead.sdmxToEvo];
-	const constants = initSdmxConstants(rows[1], idx);
-
-	validateConstants(constants, ["questSource", "country", "timePeriod"]);
+	const constants = validateConstants(initSdmxConstants(rows[1], idx), [
+		"questSource",
+		"country",
+		"timePeriod",
+	]);
 
 	let read = 0;
 	let written = 0;
