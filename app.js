@@ -280,6 +280,10 @@ function validateRequiredColumns(header, requiredFields) {
 }
 
 async function validateRequiredColumnsForSelectedDirection() {
+	if (!inputFile) {
+		return { valid: false, missing: [] };
+	}
+
 	const text = await inputFile.text();
 
 	const delimiter = selectedDirection === "sdmxToEvo" ? ";" : ",";
