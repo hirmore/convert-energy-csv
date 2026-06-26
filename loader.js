@@ -24,8 +24,20 @@ export async function fetchText(path) {
 }
 
 export async function loadVersion(path = "version.json") {
-	const data = await fetchJson(path);
-	return data?.version || "unknown";
+	try {
+		const data = await fetchJson(path);
+
+		const version = typeof data?.version === "string" ? data.version : null;
+		const mapping = typeof data?.mapping === "string" ? data.mapping : null;
+
+		if (!version || !mapping) {
+			return "unknown(unknown)";
+		}
+
+		return `${version}(${mapping})`;
+	} catch {
+		return "unknown(unknown)";
+	}
 }
 
 export async function loadDateConstants(path = "constants/date.json") {
