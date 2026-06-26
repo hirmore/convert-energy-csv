@@ -104,7 +104,7 @@ export function convertEvoToSdmx(text, mapProductFlows) {
 	const rows = parseCsv(text, ",");
 	if (rows.length < 2) {
 		throw new Error(
-			"EVO input file must contain a header row and at least one record."
+			"E-VO input file must contain a header row and at least one record."
 		);
 	}
 

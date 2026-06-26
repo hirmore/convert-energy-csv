@@ -308,8 +308,11 @@ async function handleInputFileChange(file) {
 
 	if (validation.valid) {
 		updateButtonState();
+		setConversionStatus("Correctly formatted input file");
 	} else {
 		setConvertEnabled(false);
+		setConversionStatus("Wrongly formatted input file");
+
 		setResultStatus(
 			`Input file is missing required columns for ${selectedDirection} conversion. Missing: ${validation.missing.join(
 				", "
