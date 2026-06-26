@@ -22,7 +22,7 @@ const SDMX_KEY_FIELDS = [
 /**
  * Initialize converter state from app context
  */
-export let converterState = {
+export const converterState = {
 	outputColumnHead: null,
 	dateConst: null,
 	evoToSdmxDefaults: null,
@@ -31,15 +31,27 @@ export let converterState = {
 	refAreaMap: null,
 };
 
-export function initConverterState(state) {
-	converterState = { ...converterState, ...state };
-}
-
 export function buildCountryReverseMap() {
 	converterState.refAreaMap = {};
 	for (const [country, code] of Object.entries(converterState.countryMap)) {
 		converterState.refAreaMap[code] = country;
 	}
+}
+
+function validateConstants(constants, requiredFields) {
+	for (const field of requiredFields) {
+		const value = constants?.[field];
+
+		if (
+			value === undefined ||
+			value === null ||
+			(typeof value === "string" && value.trim() === "")
+		) {
+			throw new Error(`missing or invalid value for a field "${field}"`);
+		}
+	}
+
+	return constants;
 }
 
 export function convertSdmxToEvo(text, mapProductFlows) {
@@ -55,8 +67,10 @@ export function convertSdmxToEvo(text, mapProductFlows) {
 
 	const mapping = buildSdmxToEvoMap(mapProductFlows.rows);
 	const outputRows = [converterState.outputColumnHead.sdmxToEvo];
-	const skippedRows = [converterState.outputColumnHead.sdmxToEvo];
+	const skippedRows = [converterState.outputColumnHead.evoToSdmx];
 	const constants = initEvoConstants(rows[1], idx);
+
+	validateConstants(constants, ["refArea", "quest", "time"]);
 
 	let read = 0;
 	let written = 0;
@@ -114,6 +128,8 @@ export function convertEvoToSdmx(text, mapProductFlows) {
 	const outputRows = [converterState.outputColumnHead.evoToSdmx];
 	const skippedRows = [converterState.outputColumnHead.sdmxToEvo];
 	const constants = initSdmxConstants(rows[1], idx);
+
+	validateConstants(constants, ["questSource", "country", "timePeriod"]);
 
 	let read = 0;
 	let written = 0;

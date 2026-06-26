@@ -1,7 +1,7 @@
 import {
 	convertSdmxToEvo,
 	convertEvoToSdmx,
-	initConverterState,
+	converterState,
 	buildCountryReverseMap,
 	getInputHeaderFields,
 	getRequiredColumnsForDirection,
@@ -50,12 +50,6 @@ let convertedCsv = null;
 let skippedCsv = null;
 let showingSkipped = false;
 
-let dateConst = null;
-let outputColumnHead = null;
-let countryMap = null;
-let dataSetMap = null;
-let evoToSdmxDefaults = null;
-
 let mapProductFlows = null;
 let inputFile = null;
 let selectedDirection = "evoToSdmx";
@@ -95,8 +89,7 @@ async function loadProductFlowsMapping() {
 
 async function loadVersion() {
 	try {
-		const version = await fetchVersion();
-		setVersion(version);
+		setVersion(await fetchVersion());
 	} catch (err) {
 		setVersion("unknown");
 	}
@@ -104,8 +97,7 @@ async function loadVersion() {
 
 async function loadDateConstants() {
 	try {
-		dateConst = await fetchDateConstants();
-		initConverterState({ dateConst });
+		converterState.dateConst = await fetchDateConstants();
 	} catch (err) {
 		setResultStatus(`Failed to load date constants: ${err.message}`);
 	}
@@ -113,8 +105,7 @@ async function loadDateConstants() {
 
 async function loadOutputColumnHead() {
 	try {
-		outputColumnHead = await fetchOutputColumnHead();
-		initConverterState({ outputColumnHead });
+		converterState.outputColumnHead = await fetchOutputColumnHead();
 	} catch (err) {
 		setResultStatus(`Failed to load output rows: ${err.message}`);
 	}
@@ -122,8 +113,7 @@ async function loadOutputColumnHead() {
 
 async function loadDefaultValues() {
 	try {
-		evoToSdmxDefaults = await fetchDefaultValues();
-		initConverterState({ evoToSdmxDefaults });
+		converterState.evoToSdmxDefaults = await fetchDefaultValues();
 	} catch (err) {
 		setResultStatus(`Failed to load default values: ${err.message}`);
 	}
@@ -131,14 +121,7 @@ async function loadDefaultValues() {
 
 async function loadCountryMapping() {
 	try {
-		countryMap = await fetchCountryMapping();
-		initConverterState({
-			dateConst,
-			outputColumnHead,
-			evoToSdmxDefaults,
-			dataSetMap,
-			countryMap,
-		});
+		converterState.countryMap = await fetchCountryMapping();
 		buildCountryReverseMap();
 	} catch (err) {
 		setResultStatus(`Failed to load country mapping: ${err.message}`);
@@ -147,10 +130,9 @@ async function loadCountryMapping() {
 
 async function loadDataSetMappingCsv() {
 	try {
-		dataSetMap = await fetchDataSetMapping();
-		initConverterState({ dataSetMap });
+		converterState.dataSetMap = await fetchDataSetMapping();
 	} catch (err) {
-		dataSetMap = null;
+		converterState.dataSetMap = null;
 		setMappingStatus(`Failed to load dataset mapping: ${err.message}`);
 		setResultStatus(`Dataset mapping failed: ${err.message}`);
 	}
@@ -173,6 +155,7 @@ async function handleConvertClick() {
 		}
 	} catch (err) {
 		setResultStatus(`Conversion failed: ${err.message}`);
+		setConversionStatus("Conversion failed.");
 		return;
 	}
 
