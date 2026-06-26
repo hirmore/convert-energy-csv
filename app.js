@@ -318,9 +318,13 @@ async function handleInputFileChange(file) {
 	}
 }
 
-function handleDirectionButtonClick(direction) {
+async function handleDirectionButtonClick(direction) {
 	selectedDirection = direction;
 	setDirectionButtons(direction);
+
+	if (inputFile) {
+		await handleInputFileChange(inputFile);
+	}
 }
 
 function updateButtonState() {
