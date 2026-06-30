@@ -8,7 +8,7 @@
 		"/0-dev.#54_58/Annual_Renew_2025_54_58.xlsb",
 		"/ELEC3_M/MonthlyElec_v7.0.6.xlsm",
 		"/COIR_M/COIR_v2.9.5b_new_formula2-dev.v1.xlsm",
-		"/MOSOIL_M/MOSOIL_v6.5.8.test.v4.xlsb",
+		"/MOSOIL_M/MOSOIL_v6.5.8-dev.v4.xlsb",
 		"/MOSGAS_M/MGS_v7.3.4.xlsm",
 		"/SOLID_M/MONTHLY_COAL_v2.7.9a.xlsm"
 	],
@@ -19,15 +19,5 @@
 	"output_duplicates": "Mapping_Duplicates.csv",
 	"param_sheet": "Param_Questionnaire",
 	"map_sheet": "Mapping_Products_Flows",
-	"table_name": "Mapping_ISO_SDMX",
-	"sdmx_key_fields": [
-		"ENERGY_PRODUCT",
-		"MAIN_FLOW",
-		"FLOW_BREAKDOWN",
-		"PLANT_TYPE",
-		"STOCKS",
-		"VIS_A_VIS_AREA",
-		"MEASURE_VALUE_TYPE",
-		"UNIT_MEASURE"
-	]
+	"table_name": "Mapping_ISO_SDMX"
 }
