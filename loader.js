@@ -65,7 +65,7 @@ export async function loadDataSetMapping(path = "mappings/datasets.csv") {
 }
 
 export async function loadProductFlowsMapping(
-	path = "mappings/productFlows.csv"
+	path = "mappings/product_flows.csv"
 ) {
 	const text = await fetchText(path);
 	return parseProductFlowsMappingCsv(text);
